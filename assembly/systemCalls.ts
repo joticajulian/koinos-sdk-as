@@ -3,6 +3,7 @@ import { Protobuf, Reader, Writer } from 'as-proto';
 import { system_calls, system_call_ids, chain, protocol, authority, value, error, name_service } from '@koinos/proto-as';
 import { StringBytes } from ".";
 import { Base58 } from "./util";
+import { checkauthority } from "./checkauthority";
 
 export namespace System {
   export const DEFAULT_MAX_BUFFER_SIZE = 1024;
@@ -780,11 +781,14 @@ export namespace System {
   }
 
   /**
-    * Check authority for an account
+    * Check authority for an account (not secure, it is recommended to use
+    * System.checkCallContractAuthority or System.checkAuthority2)
     * @param type type of authority required
     * @param account account to check
+    * @param data data to be passed
     * @returns bool true if the account has authority
     * @example
+    * @deprecated
     * ```ts
     * System.checkAuthority(authority.authorization_type.transaction_application, Base58.decode('1DQzuCcTKacbs9GGScRTU1Hc8BsyARTPqe));
     * ```
@@ -798,6 +802,64 @@ export namespace System {
     const result = Protobuf.decode<system_calls.check_authority_result>(SYSTEM_CALL_BUFFER, system_calls.check_authority_result.decode, RETURN_BYTES[0]);
     return result.value;
   }
+
+  /**
+   * Check authority for an account
+   * @param type type of authority required
+   * @param account account to check
+   * @param data data to be passed
+   * @param caller caller of the current contract
+   * @param entryPoint entry point triggered in the current contract
+   * @returns bool true if the account has authority
+   * @example
+   * ```ts
+   * const args = System.getArguments();
+   * const caller = System.getCaller();
+   * const isAuthorized = System.checkAuthority2(
+   *   authority.authorization_type.contract_call,
+   *   Base58.decode("1DQzuCcTKacbs9GGScRTU1Hc8BsyARTPqe"),
+   *   args.args,
+   *   caller.caller,
+   *   args.entry_point
+   * );
+   * ```
+   */
+  export function checkAuthority2(type: authority.authorization_type, account: Uint8Array, data: Uint8Array | null = null, caller: Uint8Array | null = null, entryPoint: u32 = 0): bool {
+    const args = new checkauthority.checkauthority_args(account, type, caller, entryPoint, data);
+    const encodedArgs = Protobuf.encode(args, checkauthority.checkauthority_args.encode);
+     // TODO: Add 607 system call to koinos-proto
+    const retcode = env.invokeSystemCall(607, SYSTEM_CALL_BUFFER.dataStart as u32, MAX_BUFFER_SIZE, encodedArgs.dataStart as u32, encodedArgs.byteLength, RETURN_BYTES.dataStart as u32);
+    checkErrorCode(retcode, SYSTEM_CALL_BUFFER.slice(0, RETURN_BYTES[0]));
+    const result = Protobuf.decode<system_calls.check_authority_result>(SYSTEM_CALL_BUFFER, system_calls.check_authority_result.decode, RETURN_BYTES[0]);
+    return result.value;
+  }
+
+  /**
+   * Check authority for an account using call_contract type.
+   * It takes care of filling the caller, data, and entry point. If you
+   * already consulted the caller, data, or entry point to the chain
+   * consider using System.checkAuthority2 to optimize your code.
+   * @param account account to check
+   * @returns bool true if the account has authority
+   * @example
+   * ```ts
+   * const isAuthorized = System.checkCallContractAuthority(
+   *   Base58.decode("1DQzuCcTKacbs9GGScRTU1Hc8BsyARTPqe"),
+   * );
+   * ```
+   */
+  export function checkCallContractAuthority(account: Uint8Array): bool {
+    const args = getArguments();
+    const caller = getCaller();
+    return checkAuthority2(
+      authority.authorization_type.contract_call,
+      account,
+      args.args,
+      caller.caller,
+      args.entry_point
+    );
+  }
+  
 
   /**
    * Require authority for an account
