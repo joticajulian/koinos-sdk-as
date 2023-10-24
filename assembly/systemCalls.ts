@@ -783,7 +783,7 @@ export namespace System {
   /**
    * Get contract metadata
    */
-  export function getContractMetadata(contractId: Uint8Array): chain.contract_metadata_object {
+  export function getContractMetadata(contractId: Uint8Array): chain.contract_metadata_object | null {
     const args = new get_contract_metadata_arguments(contractId);
     const encodedArgs = Protobuf.encode(args, get_contract_metadata_arguments.encode);
 
@@ -837,6 +837,7 @@ export namespace System {
     if (caller.caller && caller.caller.length > 0) {
       const contractMetadata = getContractMetadata(account);
       if (
+        !contractMetadata ||
         (type == authority.authorization_type.contract_call && !contractMetadata.authorizes_call_contract) ||
         (type == authority.authorization_type.contract_upload && !contractMetadata.authorizes_upload_contract) ||
         (type == authority.authorization_type.transaction_application && !contractMetadata.authorizes_transaction_application)
