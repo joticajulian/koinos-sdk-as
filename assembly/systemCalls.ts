@@ -3,6 +3,7 @@ import { Protobuf, Reader, Writer } from 'as-proto';
 import { system_calls, system_call_ids, chain, protocol, authority, value, error, name_service } from '@koinos/proto-as';
 import { StringBytes } from ".";
 import { Base58 } from "./util";
+import { get_contract_metadata_arguments, get_contract_metadata_result } from "./getContractMetadata";
 
 export namespace System {
   export const DEFAULT_MAX_BUFFER_SIZE = 1024;
@@ -783,13 +784,13 @@ export namespace System {
    * Get contract metadata
    */
   export function getContractMetadata(contractId: Uint8Array): chain.contract_metadata_object {
-    const args = new system_calls.get_contract_metadata_arguments(contractId);
-    const encodedArgs = Protobuf.encode(args, system_calls.get_contract_metadata_arguments.encode);
+    const args = new get_contract_metadata_arguments(contractId);
+    const encodedArgs = Protobuf.encode(args, get_contract_metadata_arguments.encode);
 
     // TODO: Add 112 system call to koinos-proto
     const retcode = env.invokeSystemCall(112, SYSTEM_CALL_BUFFER.dataStart as u32, MAX_BUFFER_SIZE, encodedArgs.dataStart as u32, encodedArgs.byteLength, RETURN_BYTES.dataStart as u32);
     checkErrorCode(retcode, SYSTEM_CALL_BUFFER.slice(0, RETURN_BYTES[0]));
-    const result = Protobuf.decode<system_calls.get_contract_metadata_result>(SYSTEM_CALL_BUFFER, system_calls.get_contract_metadata_result.decode, RETURN_BYTES[0]);
+    const result = Protobuf.decode<get_contract_metadata_result>(SYSTEM_CALL_BUFFER, get_contract_metadata_result.decode, RETURN_BYTES[0]);
     return result.value;
   }
 

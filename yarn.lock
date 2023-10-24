@@ -172,9 +172,10 @@
     protobufjs "^6.11.2"
     somap "^0.5.14"
 
-"@koinos/proto-as@github:koinos/koinos-proto-as#ce72fe6cd86e1a038d18f1467138c07e513f63da":
+"@koinos/proto-as@1.2.0":
   version "1.2.0"
-  resolved "https://codeload.github.com/koinos/koinos-proto-as/tar.gz/ce72fe6cd86e1a038d18f1467138c07e513f63da"
+  resolved "https://registry.yarnpkg.com/@koinos/proto-as/-/proto-as-1.2.0.tgz#f262b51895116a6f4f8b77f0864e82e1396d3061"
+  integrity sha512-uhdyXwec0PYTf/DUd4W68eEsC+IJT/+kzFzlsfVOIc7Dy+hfZNp9KT39RxOJhS02ck1q/wfJDiKku8bbvy04pA==
   dependencies:
     as-proto "npm:@koinos/as-proto"
 
